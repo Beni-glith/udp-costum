@@ -2,29 +2,62 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/build-apk.yml"
+      - "**/*.gradle"
+      - "**/*.gradle.kts"
+      - "**/gradlew"
+      - "**/app/**"
+      - "**/src/**"
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      - uses: android-actions/setup-android@v3
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Build APK
-        working-directory: android
+      - name: Build APK (auto find gradlew)
+        shell: bash
         run: |
-          chmod +x gradlew || true
+          set -e
+
+          echo "== Listing repo root =="
+          ls -la
+
+          echo "== Finding gradlew =="
+          GRADLEW_PATH="$(find . -type f -name gradlew | head -n 1)"
+          echo "Found gradlew: ${GRADLEW_PATH}"
+
+          if [ -z "${GRADLEW_PATH}" ]; then
+            echo "ERROR: gradlew tidak ditemukan di repo."
+            echo "Pastikan kamu mengupload folder project Android yang lengkap (harus ada gradlew, gradle/wrapper, settings.gradle, dan folder app)."
+            exit 1
+          fi
+
+          chmod +x "${GRADLEW_PATH}"
+          cd "$(dirname "${GRADLEW_PATH}")"
+
+          echo "== Gradle version =="
+          ./gradlew --version
+
+          echo "== Building Debug APK =="
           ./gradlew assembleDebug
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
         with:
           name: APK
-          path: android.apk/app/build/outputs/apk/debug/*.apk
+          path: "**/app/build/outputs/apk/debug/*.apk"
           
