@@ -1,4 +1,4 @@
-name: Build Android APK (No Wrapper)
+name: Build Android APK (No Wrapper )
 
 on:
   workflow_dispatch:
