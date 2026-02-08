@@ -67,6 +67,24 @@ Client:
    echo ping | nc -u -w1 127.0.0.1 5300
    ```
 
+
+## Android App (Client)
+
+Project Android tersedia di folder `android/`.
+
+Langkah cepat:
+1. Buka folder `android/` di Android Studio.
+2. Build dan run ke device Android.
+3. Isi field:
+   - `config`: contoh `min.xhmt.my.id:54-65535@Trial25171:5300`
+   - `dst`: contoh `8.8.8.8:53`
+   - `server tcp port`: contoh `9000`
+4. Tap **Start** untuk mulai tunnel, aplikasi listen UDP di `127.0.0.1:<localPort>` (sesuai config).
+
+Catatan:
+- Android app ini fokus sebagai **client UDP tunnel**.
+- Server tetap dijalankan di host/server menggunakan binary `udpsrv`.
+
 ## Fitur protokol
 - Framing biner: magic `UDPC`, version `1`, flags, session_id, dst_port, payload_len
 - HMAC-SHA256 (`32` byte) atas `header+body`
