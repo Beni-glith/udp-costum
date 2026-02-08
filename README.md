@@ -17,9 +17,11 @@ min.xhmt.my.id:1-65535@Trial25171:1
 ```
 
 Aturan parsing:
+- Format dasarnya kompatibel gaya `ip:port@user:pass` dengan arti final: `<serverHost>:<udpPortSpec>@<token>:<localPort>`
 - `udpPortSpec = 1-65535` => `ANY_UDP_PORT=true`
 - `udpPortSpec = angka` => hanya port itu yang diizinkan
-- `token` dipakai untuk HMAC-SHA256
+- `udpPortSpec = rentang` (contoh `54-65535`) => izinkan hanya port dalam rentang itu
+- `token` dipakai untuk HMAC-SHA256, dan boleh mengandung `:` (contoh `user:pass`)
 - `localPort` adalah UDP listen pada `127.0.0.1:<localPort>`
 
 ## Build

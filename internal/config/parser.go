@@ -13,6 +13,8 @@ type ClientConfig struct {
 	ServerHost  string
 	AnyUDPPort  bool
 	AllowedPort uint16
+	PortMin     uint16
+	PortMax     uint16
 	Token       string
 	LocalPort   uint16
 }
@@ -45,6 +47,21 @@ func ParseClientConfig(raw string) (ClientConfig, error) {
 
 	if portSpec == AnyUDPPortLiteral {
 		cfg.AnyUDPPort = true
+		cfg.PortMin = 1
+		cfg.PortMax = 65535
+		return cfg, nil
+	}
+
+	if strings.Contains(portSpec, "-") {
+		min, max, err := parsePortRange(portSpec)
+		if err != nil {
+			return cfg, fmt.Errorf("invalid udpPortSpec: %w", err)
+		}
+		cfg.PortMin = min
+		cfg.PortMax = max
+		if min == 1 && max == 65535 {
+			cfg.AnyUDPPort = true
+		}
 		return cfg, nil
 	}
 
@@ -53,6 +70,8 @@ func ParseClientConfig(raw string) (ClientConfig, error) {
 		return cfg, fmt.Errorf("invalid udpPortSpec: %w", err)
 	}
 	cfg.AllowedPort = p
+	cfg.PortMin = p
+	cfg.PortMax = p
 	return cfg, nil
 }
 
@@ -61,6 +80,12 @@ func (c ClientConfig) ValidateDstPort(port uint16) error {
 		return fmt.Errorf("destination port must be 1..65535")
 	}
 	if c.AnyUDPPort {
+		return nil
+	}
+	if c.PortMin > 0 && c.PortMax > 0 {
+		if port < c.PortMin || port > c.PortMax {
+			return fmt.Errorf("destination port %d not allowed; expected %d..%d", port, c.PortMin, c.PortMax)
+		}
 		return nil
 	}
 	if port != c.AllowedPort {
@@ -101,6 +126,25 @@ func splitTokenLocalPort(in string) (string, uint16, error) {
 		return "", 0, fmt.Errorf("invalid localPort: %w", err)
 	}
 	return token, p, nil
+}
+
+func parsePortRange(s string) (uint16, uint16, error) {
+	parts := strings.Split(s, "-")
+	if len(parts) != 2 {
+		return 0, 0, fmt.Errorf("range must be <start>-<end>")
+	}
+	min, err := parsePort(parts[0])
+	if err != nil {
+		return 0, 0, err
+	}
+	max, err := parsePort(parts[1])
+	if err != nil {
+		return 0, 0, err
+	}
+	if min > max {
+		return 0, 0, fmt.Errorf("range start must be <= end")
+	}
+	return min, max, nil
 }
 
 func parsePort(s string) (uint16, error) {

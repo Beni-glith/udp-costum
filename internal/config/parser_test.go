@@ -18,6 +18,25 @@ func TestParseClientConfigAnyPort(t *testing.T) {
 	}
 }
 
+func TestParseClientConfigRangePort(t *testing.T) {
+	cfg, err := ParseClientConfig("min.xhmt.my.id:54-65535@Trial25171:1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.AnyUDPPort {
+		t.Fatalf("expected AnyUDPPort=false for partial range")
+	}
+	if cfg.PortMin != 54 || cfg.PortMax != 65535 {
+		t.Fatalf("unexpected range: %d-%d", cfg.PortMin, cfg.PortMax)
+	}
+	if err := cfg.ValidateDstPort(53); err == nil {
+		t.Fatalf("expected 53 to be rejected")
+	}
+	if err := cfg.ValidateDstPort(54); err != nil {
+		t.Fatalf("expected 54 to be accepted: %v", err)
+	}
+}
+
 func TestParseClientConfigSinglePort(t *testing.T) {
 	cfg, err := ParseClientConfig("example.com:53@tok:9001")
 	if err != nil {
@@ -37,12 +56,26 @@ func TestParseClientConfigSinglePort(t *testing.T) {
 	}
 }
 
+func TestParseClientConfigTokenCanContainColon(t *testing.T) {
+	cfg, err := ParseClientConfig("10.0.0.1:53@user:pass:5300")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.Token != "user:pass" {
+		t.Fatalf("expected token user:pass got %q", cfg.Token)
+	}
+	if cfg.LocalPort != 5300 {
+		t.Fatalf("expected localPort 5300 got %d", cfg.LocalPort)
+	}
+}
+
 func TestParseClientConfigInvalid(t *testing.T) {
 	cases := []string{
 		"",
 		"badformat",
 		"host:53@tok:0",
 		":53@tok:1",
+		"host:100-1@tok:1",
 	}
 	for _, c := range cases {
 		if _, err := ParseClientConfig(c); err == nil {
