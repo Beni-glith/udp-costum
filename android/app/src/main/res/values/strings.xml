@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">UDP Custom Lite</string>
+    <string name="header_title">UDP Custom Lite</string>
+    <string name="tab_tunnel">TUNNEL</string>
+    <string name="tab_log">LOG</string>
+    <string name="hint_config">ip:port@user:pass</string>
+    <string name="hint_dst">dst_ip:dst_port (contoh 8.8.8.8:53)</string>
+    <string name="hint_server_port">server tcp port (default 9000)</string>
+    <string name="opt_udp_custom">UDP Custom</string>
+    <string name="opt_ssl">SSL</string>
+    <string name="opt_slowdns">SlowDns</string>
+    <string name="opt_dns">Enable DNS</string>
+    <string name="connect">CONNECT</string>
+    <string name="disconnect">DISCONNECT</string>
+    <string name="status_idle">Status: Idle</string>
+    <string name="status_connected">Status: Connected</string>
+</resources>
