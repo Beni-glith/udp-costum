@@ -1,15 +1,7 @@
-name: Build Android APK
+name: Build Android APK (No Wrapper)
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - ".github/workflows/build-apk.yml"
-      - "**/*.gradle"
-      - "**/*.gradle.kts"
-      - "**/gradlew"
-      - "**/app/**"
-      - "**/src/**"
 
 jobs:
   build:
@@ -28,32 +20,26 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Build APK (auto find gradlew)
-        shell: bash
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+
+      - name: Download Gradle
         run: |
           set -e
+          GRADLE_VERSION="8.7"
+          curl -L "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -o gradle.zip
+          unzip -q gradle.zip
+          echo "$PWD/gradle-${GRADLE_VERSION}/bin" >> $GITHUB_PATH
+          gradle --version
 
-          echo "== Listing repo root =="
+      - name: Build Debug APK (no gradlew)
+        working-directory: android
+        run: |
+          set -e
           ls -la
-
-          echo "== Finding gradlew =="
-          GRADLEW_PATH="$(find . -type f -name gradlew | head -n 1)"
-          echo "Found gradlew: ${GRADLEW_PATH}"
-
-          if [ -z "${GRADLEW_PATH}" ]; then
-            echo "ERROR: gradlew tidak ditemukan di repo."
-            echo "Pastikan kamu mengupload folder project Android yang lengkap (harus ada gradlew, gradle/wrapper, settings.gradle, dan folder app)."
-            exit 1
-          fi
-
-          chmod +x "${GRADLEW_PATH}"
-          cd "$(dirname "${GRADLEW_PATH}")"
-
-          echo "== Gradle version =="
-          ./gradlew --version
-
-          echo "== Building Debug APK =="
-          ./gradlew assembleDebug
+          gradle assembleDebug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
